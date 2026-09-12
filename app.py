@@ -419,9 +419,19 @@ def logout():
 # ==================== END EMAIL/PASSWORD AUTH ====================
 
 # ==================== GOOGLE LOGIN [LOGIN] ====================
+'''
+OLD VERSION — replaced with new version below that links Google to existing email/password accounts if the email matches.
 @app.route('/login/google')
 def login_google():
     redirect_uri = 'http://127.0.0.1:5000/login/google/callback'
+    return google.authorize_redirect(redirect_uri)
+'''
+@app.route('/login/google')
+def login_google():
+    if os.environ.get("RENDER"):
+        redirect_uri = 'https://flask-chatgpt-app.onrender.com/login/google/callback'
+    else:
+        redirect_uri = 'http://127.0.0.1:5000/login/google/callback'
     return google.authorize_redirect(redirect_uri)
 
 
