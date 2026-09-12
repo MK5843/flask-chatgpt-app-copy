@@ -67,7 +67,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{DB_PASSWORD}@lo
 # [DEPLOYMENT] — uses Neon on Render if DATABASE_URL is set, otherwise falls back to local Postgres
 if os.environ.get("RENDER"):
     # Running on Render — always use Neon
-    DATABASE_URL = os.environ.get("DATABASE_URL")
+    DATABASE_URL = os.environ.get("NEON_DATABASE_URL")
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL is not set. Add it in Render's environment variables.")
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
