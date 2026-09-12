@@ -140,6 +140,7 @@ button:hover {
 .app-layout {
     display: flex;
     height: 100vh;
+    height: 100dvh;
     width: 100%;
 }
 
@@ -395,6 +396,7 @@ input[type="password"]:focus {
     font-size: 0.75rem;
     color: #fff;
     margin: 0px 0 8px 0;
+    flex-shrink: 0;
 }
 /* ==================== END FOOTER TEXT ==================== */
 
@@ -479,6 +481,7 @@ input[type="password"]:focus {
         top: 0;
         left: 0;
         height: 100vh;
+        height: 100dvh;
         z-index: 100;
         width: 240px;
         transform: translateX(-100%); /* hidden off-screen by default */
