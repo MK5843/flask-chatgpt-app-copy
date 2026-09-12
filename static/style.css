@@ -1,0 +1,523 @@
+/* ==================== RESET ==================== */
+* { box-sizing: border-box; }
+/* ==================== END RESET ==================== */
+
+/* ==================== PAGE BACKGROUND ==================== */
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin: 0;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0px;
+    width: 100%;
+    overflow-y: auto;  /* stops the whole page from scrolling */
+}
+body:has(.login-card) {
+    align-items: center;
+    justify-content: center;
+}
+/* ==================== END PAGE BACKGROUND ==================== */
+
+
+/* ==================== CHAT CARD (the white box) ==================== */
+.chat-card {
+    border-radius: 16px;
+    padding: 0px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 1.3rem;
+    text-align: center;
+    margin: 5px;
+    color: #333;
+}
+/* ==================== END CHAT CARD ==================== */
+
+
+/* ==================== CHAT LOG (scrollable message area) ==================== */
+#chat-log {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px 20px 0 20px;
+    border-radius: 12px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+/* ==================== END CHAT LOG ==================== */
+
+
+/* ==================== MESSAGE BUBBLES ==================== */
+.bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    max-width: 78%;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* User messages: right-aligned, colored */
+.bubble.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+/* AI messages: left-aligned, white with border */
+.bubble.assistant {
+    align-self: flex-start;
+    background: #fff;
+    color: #222;
+    border: 1px solid #e0e0e0;
+}
+
+/* Temporary "Thinking..." bubble style */
+.bubble.thinking {
+    opacity: 0.6;
+    font-style: italic;
+}
+/* ==================== END MESSAGE BUBBLES ==================== */
+
+
+/* ==================== INPUT ROW ==================== */
+.input-row {
+    display: flex;
+    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    background: transparent;/* Changes according to backdrop theme */
+    padding-top: 20px;
+    padding-bottom: 24px;
+    padding-left: 20px;
+    padding-right: 20px;
+    z-index: 10;
+    width: 100%;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+#message {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    outline: none;
+}
+
+#message:focus {
+    border-color: #764ba2;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+/* ==================== END INPUT ROW ==================== */
+
+/* ==================== APP LAYOUT (SIDEBAR + MAIN) ==================== */
+.app-layout {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+.mobile-toggle {
+    display: none;
+}
+
+.sidebar {
+    width: 260px;
+    background: #202123;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.2s ease;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar.collapsed .new-chat-btn,
+.sidebar.collapsed .conversation-list,
+.sidebar.collapsed .sidebar-footer .user-info,
+.sidebar.collapsed .logout-btn {
+    display: none;
+}
+
+.sidebar-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+}
+
+.collapse-btn {
+    background: none;
+    border: none;
+    color: #eee;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.collapse-btn:hover {
+    background: #2f3033;
+}
+
+.new-chat-btn {
+    width: 100%;
+    padding: 8px;
+    background: #343541;
+    color: #eee;
+    border: 1px solid #4d4d4f;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.new-chat-btn:hover {
+    background: #40414f;
+}
+
+.conversation-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.conversation-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.conversation-item:hover {
+    background: #2f3033;
+}
+
+.sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid #333;
+}
+
+.user-info {
+    padding: 8px 0;
+    font-weight: 600;
+    color: #ddd;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 8px;
+    background: #343541;
+    color: #eee;
+    border: 1px solid #4d4d4f;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #40414f;
+}
+
+.main-area {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.main-area .chat-card {
+    height: auto;
+    display: flex; 
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    padding-bottom: 0px;
+    position: relative;
+}
+
+.main-area #chat-log {
+    flex: 1;
+    padding-right: 15px; /* small buffer so text doesn't touch the scrollbar */
+}
+/* ==================== END APP LAYOUT ==================== */
+
+/* ==================== LOGIN PAGE INPUT SPACING FIX ==================== */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    outline: none;
+    display: block;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: #764ba2;
+}
+/* ==================== END LOGIN PAGE INPUT SPACING FIX ==================== */
+
+/* ==================== LOGIN PAGE ==================== */
+.login-card {
+    max-width: 380px;
+    margin: auto;
+    background: #fff;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: 28px;
+    border-radius: 16px;
+}
+
+#form-title {
+    margin-bottom: 20px;
+}
+
+.login-card input {
+    min-height: 46px;
+    margin-bottom: 12px;
+}
+
+.password-field {
+    margin-top: 0; /* was inline "margin-top: 10px" — now handled by input margin-bottom above */
+}
+
+.submit-btn,
+.google-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 1rem;
+}
+
+.submit-btn {
+    margin-top: 14px;
+}
+
+.google-btn {
+    background: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.google-link {
+    text-decoration: none;
+}
+
+.error-msg {
+    color: #d33;
+    text-align: center;
+    margin-top: 10px;
+    display: none;
+    font-size: 0.9rem;
+}
+
+.toggle-text {
+    text-align: center;
+    margin-top: 14px;
+}
+
+.login-divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 22px 0;
+}
+
+@media (max-width: 480px) {
+    body:has(.login-card) {
+        padding: 16px;
+    }
+
+    .login-card {
+        max-width: 100% !important;
+        width: 100%;
+        margin: 0 !important;
+        padding: 22px;
+        border-radius: 16px !important;
+    }
+
+    #form-title {
+        font-size: 1.25rem;
+    }
+
+    .login-card input,
+    .submit-btn,
+    .google-btn {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    .submit-btn,
+    .google-btn {
+        font-weight: 600;
+    }
+}
+/* ==================== END LOGIN PAGE ==================== */
+
+/* ==================== FOOTER TEXT ==================== */
+.footer-text {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #fff;
+    margin: 0px 0 8px 0;
+}
+/* ==================== END FOOTER TEXT ==================== */
+
+/* ==================== VERSION TEXT ==================== */
+.version-text {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #666;
+    margin-top: 10px;
+}
+/* ==================== END VERSION TEXT ==================== */
+
+/* ==================== RESPONSIVE / MOBILE ==================== */
+
+/* Tablets and smaller laptops */
+@media (max-width: 600px) {
+    body {
+        padding: 0px;
+        align-items: stretch;
+    }
+
+    .chat-card {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+
+    h1 {
+        font-size: 1.1rem;
+    }
+
+    #chat-log {
+        height: 65vh;
+    }
+
+    .bubble {
+        max-width: 88%;
+        font-size: 0.95rem;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+    .input-row {
+        flex-direction: column; /* stack input and button instead of side-by-side */
+    }
+
+    button {
+        width: 100%;
+    }
+
+    #message {
+        width: 100%;
+    }
+}
+/* ==================== END RESPONSIVE / MOBILE ==================== */
+
+/* ==================== SIDEBAR MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .app-layout {
+        position: relative;
+    }
+        .mobile-toggle {
+            display: flex;
+            justify-content: center; /* Centers icon horizontally */
+            align-items: center;     /* Centers icon vertically */
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 200;
+            background: transparent;  /* Removes the solid background */
+            color: #eee;
+            border: none;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 100;
+        width: 240px;
+        transform: translateX(-100%); /* hidden off-screen by default */
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar.open {
+        transform: translateX(0); /* slides in when opened */
+    }
+
+    .sidebar.collapsed {
+        width: 240px; /* on mobile, "collapsed" just means "hidden", not narrow */
+        transform: translateX(-100%);
+    }
+
+    .main-area {
+        width: 100%;
+        padding: 8px;
+    }
+
+    .main-area .chat-card {
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden; /* [NEW] contains children so nothing spills out */
+    }
+
+    .main-area #chat-log {
+        min-height: 0; /* [NEW] required for internal scroll on mobile too */
+        padding: 16px 16px 2px 16px; /* smaller side padding on narrow screens */
+    }
+
+    .main-area .input-row {
+        padding: 12px 16px 16px 16px;
+    }
+
+    .main-area h1 {
+        margin: 12px 0;
+        flex-shrink: 0;
+    }
+}
+/* ==================== END SIDEBAR MOBILE RESPONSIVE ==================== */
+

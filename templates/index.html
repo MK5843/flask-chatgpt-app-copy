@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask ChatGPT Application</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='web/icons8-menu-deco-glyph-32.png') }}">
+</head>
+<body>
+    <div class="app-layout">
+
+        <!-- ==================== MOBILE TOGGLE (always visible) ==================== -->
+        <button class="mobile-toggle" id="mobile-toggle" onclick="toggleSidebar()"><img src="{{ url_for('static', filename='web/icons8-menu-deco-glyph-32.png') }}" alt="Menu" class="menu-icon"></button>
+        <!-- ==================== END MOBILE TOGGLE ==================== -->
+
+        <!-- ==================== SIDEBAR ==================== -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <button class="collapse-btn" onclick="toggleSidebar()"><img src="{{ url_for('static', filename='web/icons8-menu-deco-glyph-32.png') }}" alt="Menu" class="menu-icon"></button>
+            </div>
+
+            <div class="conversation-list" id="conversation-list">
+                <!-- past conversations get added here by JS -->
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info" id="user-info">Loading...</div>
+                <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
+                <br/>
+                <button class="logout-btn" onclick="logout()">Log out</button>
+                <div class="version-text">v1.0.0</div>
+            </div>
+        </div>
+        <!-- ==================== END SIDEBAR ==================== -->
+
+        <!-- ==================== MAIN CHAT AREA ==================== -->
+        <div class="main-area">
+            
+            <div class="chat-card">
+                <h1>&nbsp;Flask AI Chatbot Application</h1>
+
+                <div id="chat-log"></div>
+
+                <div class="input-row">
+                    <input type="text" id="message" placeholder="Type your message..." autocomplete="off">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+               <p class="footer-text">AI can make mistakes. Please verify important information and do not enter sensitive, personal, or confidential information.</p>
+
+            </div>
+            
+        </div>
+        <!-- ==================== END MAIN CHAT AREA ==================== -->
+
+    </div>
+
+    <script>
+        // ==================== STATE ====================
+        let conversationId = crypto.randomUUID(); // current conversation being viewed/added to
+        // ==================== END STATE ====================
+
+
+        // ==================== SIDEBAR TOGGLE ====================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobile-toggle');
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('open');
+                mobileToggle.style.display = sidebar.classList.contains('open') ? 'none' : 'flex';
+         } else {
+        sidebar.classList.toggle('collapsed');
+        }
+        }
+        // ==================== END SIDEBAR TOGGLE ====================
+
+        // ==================== CLOSE SIDEBAR ON MOBILE (after selecting something) ====================
+        function closeSidebarOnMobile() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const mobileToggle = document.getElementById('mobile-toggle');
+                sidebar.classList.remove('open');
+                mobileToggle.style.display = 'flex';
+            }
+        }
+        // ==================== END CLOSE SIDEBAR ON MOBILE ====================
+
+        
+
+        // ==================== USER INFO ====================
+        async function loadUserInfo() {
+            const res = await fetch('/me');
+            if (!res.ok) return;
+            const data = await res.json();
+            const username = data.email.split('@')[0]; // strip the @domain.com part
+            document.getElementById('user-info').textContent = username;
+        }
+        // ==================== END USER INFO ====================
+
+
+        // ==================== LOGOUT ====================
+        async function logout() {
+            await fetch('/logout', { method: 'POST' });
+            window.location.href = '/login-page';
+        }
+        // ==================== END LOGOUT ====================
+
+
+        // ==================== CONVERSATION LIST ====================
+        async function loadConversations() {
+            const res = await fetch('/conversations');
+            if (!res.ok) return;
+            const convos = await res.json();
+
+            const list = document.getElementById('conversation-list');
+            list.innerHTML = '';
+
+            convos.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'conversation-item';
+                item.textContent = c.title || 'New conversation';
+                item.onclick = () => loadConversation(c.conversation_id);
+                list.appendChild(item);
+            });
+        }
+
+        async function loadConversation(id) {
+            conversationId = id;
+            const res = await fetch(`/conversations/${id}`);
+            const messages = await res.json();
+
+            const log = document.getElementById('chat-log');
+            log.innerHTML = '';
+            messages.forEach(m => appendMessage(m.role, m.message));
+
+            closeSidebarOnMobile();  // close the sidebar on mobile after selecting a conversation
+        }
+
+        function startNewChat() {
+            conversationId = crypto.randomUUID();
+            document.getElementById('chat-log').innerHTML = '';
+            closeSidebarOnMobile();  // close the sidebar on mobile after starting a new chat
+        }
+        // ==================== END CONVERSATION LIST ====================
+
+
+        // ==================== CHAT LOGIC ====================
+        function appendMessage(role, text) {
+            const log = document.getElementById('chat-log');
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble ' + role;
+            bubble.textContent = text;
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message');
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            input.value = '';
+            input.focus();
+
+            const thinkingBubble = document.createElement('div');
+            thinkingBubble.className = 'bubble assistant thinking';
+            thinkingBubble.textContent = 'Thinking...';
+            document.getElementById('chat-log').appendChild(thinkingBubble);
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, conversation_id: conversationId })
+            });
+            const data = await response.json();
+
+            thinkingBubble.remove();
+            appendMessage('assistant', data.response || data.error || 'Something went wrong.');
+
+            loadConversations(); // refresh sidebar so this new/updated chat shows up
+        }
+
+        document.getElementById('message').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        // ==================== END CHAT LOGIC ====================
+
+
+        // ==================== INIT ====================
+        loadUserInfo();
+        loadConversations();
+        // ==================== END INIT ====================
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.vscode/
+.env
+local_backup.dump
+*.sql

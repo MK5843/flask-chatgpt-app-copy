@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Flask ChatGPT Application</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="chat-card login-card">
+        <h1 id="form-title">Sign In</h1>
+
+        <!-- ==================== EMAIL/PASSWORD FORM ==================== -->
+        <input type="email" id="email" placeholder="Email" autocomplete="email">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" class="password-field">
+
+        <button onclick="submitForm()" class="submit-btn" id="submit-btn">Sign In</button>
+
+        <p id="error-msg" class="error-msg"></p>
+
+        <p class="toggle-text">
+            <a href="#" onclick="toggleMode(); return false;" id="toggle-link">Don't have an account? Sign up</a>
+        </p>
+        <!-- ==================== END EMAIL/PASSWORD FORM ==================== -->
+
+        <hr class="login-divider">
+
+        <!-- ==================== GOOGLE LOGIN ==================== -->
+        <a href="/login/google">
+            <button class="google-btn">
+                Sign in with Google
+            </button>
+        </a>
+        <!-- ==================== END GOOGLE LOGIN ==================== -->
+    </div>
+
+    <script>
+        let isSignup = false;
+
+        function toggleMode() {
+            isSignup = !isSignup;
+            document.getElementById('form-title').textContent = isSignup ? 'Sign Up' : 'Sign In';
+            document.getElementById('submit-btn').textContent = isSignup ? 'Sign Up' : 'Sign In';
+            document.getElementById('toggle-link').textContent = isSignup
+                ? 'Already have an account? Sign in'
+                : "Don't have an account? Sign up";
+            document.getElementById('error-msg').style.display = 'none';
+        }
+
+        async function submitForm() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.style.display = 'none';
+
+            const endpoint = isSignup ? '/signup' : '/login';
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                window.location.href = '/'; // success — go to the chat page
+            } else {
+                errorMsg.textContent = data.error || 'Something went wrong.';
+                errorMsg.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
