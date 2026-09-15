@@ -313,6 +313,10 @@
     <a class="nav-link" href="#neon">Cloud Database (Neon)</a>
     <a class="nav-link" href="#render">Deploying (Render)</a>
 
+    <h4>Automation</h4>
+    <a class="nav-link" href="#ci-cd">CI/CD Pipeline</a>
+    <a class="nav-link" href="#etl">ETL Pipeline</a>
+
     <h4>Analytics Dashboard</h4>
     <a class="nav-link" href="#powerbi-connect">Connecting Power BI</a>
     <a class="nav-link" href="#powerbi-build">Building the Reports</a>
@@ -736,6 +740,78 @@ else:
       </div>
       <h3>Don't forget: Google Sign-In needs the live address too</h3>
       <p>Once the live web address exists (e.g. <code>https://flask-chatgpt-app.onrender.com</code>), it must also be added as a second <strong>Authorized redirect URI</strong> in Google Cloud Console, alongside the existing localhost one — both stay listed together, so login works in both places at once.</p>
+    </section>
+
+    <section class="doc-section" id="ci-cd">
+      <h1>Automation</h1>
+      <h2 style="border-top:none;">CI/CD Pipeline</h2>
+      <p>Rather than trusting that new code works just because it looks right, the project has automated checks that run on every single push — this is called <strong>Continuous Integration (CI)</strong>.</p>
+
+      <h3>What happens on every push</h3>
+      <p>A file at <code>.github/workflows/ci.yml</code> tells GitHub to automatically, on every push:</p>
+      <ol>
+        <li>Spin up a brand-new, temporary database, just for this test run</li>
+        <li>Install everything the app needs</li>
+        <li>Run a small set of automated tests — does the login page load? Is someone who isn't signed in correctly blocked from the chat? Is a weak password correctly rejected?</li>
+      </ol>
+      <p>If any of that fails, it's visible immediately in GitHub's <strong>Actions</strong> tab — long before it could ever reach real users.</p>
+
+      <pre><code>name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: flask-chat-app
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v</code></pre>
+
+      <h3>Continuous Deployment (CD)</h3>
+      <p>Render is connected directly to the GitHub repository, and automatically rebuilds and redeploys the live app every time new code lands on the <code>main</code> branch — no manual redeploy step needed.</p>
+
+      <div class="callout">
+        Together, this means: push code → automated checks run → if they pass, the live site updates itself, all without anyone needing to remember a manual step.
+      </div>
+    </section>
+
+    <section class="doc-section" id="etl">
+      <h2 style="border-top:none;">ETL Pipeline</h2>
+      <p>ETL stands for <strong>Extract, Transform, Load</strong> — a standard pattern for turning raw, detailed data into a clean summary that's easier to analyze. This project has one, running automatically once a day.</p>
+
+      <h3>What it does</h3>
+      <ul>
+        <li><strong>Extract</strong> — pulls the raw rows out of <code>request_log</code> and <code>error_log</code></li>
+        <li><strong>Transform</strong> — adds them up into daily totals: how many requests, how many succeeded or failed, the average response time, and the most common topic that day</li>
+        <li><strong>Load</strong> — writes that daily summary into a new table, <code>daily_stats</code> — one row per day, updated in place if it's run again the same day</li>
+      </ul>
+
+      <h3>Where it lives</h3>
+      <p>The script, <code>etl_daily_stats.py</code>, is intentionally kept separate from the main app — it only needs a database connection, nothing else, so it can run entirely on its own schedule without needing the rest of the application running.</p>
+
+      <h3>How it runs automatically</h3>
+      <p>A second GitHub Actions workflow, <code>.github/workflows/etl.yml</code>, triggers this script once a day on a timer:</p>
+      <pre><code>on:
+  schedule:
+    - cron: "0 2 * * *"   # every day at 2:00 AM UTC
+  workflow_dispatch:       # also runnable manually, any time</code></pre>
+      <p>It connects to the live production database (Neon) using a securely stored GitHub secret, never written directly into any file that gets pushed to the repository.</p>
+
+      <div class="callout warn">
+        <strong>Why this matters:</strong> without a step like this, answering a simple question like "how did we do yesterday?" means manually digging through thousands of individual raw rows every time. With it, that answer is just one row in <code>daily_stats</code>, always kept current automatically.
+      </div>
     </section>
 
     <section class="doc-section" id="powerbi-connect">
