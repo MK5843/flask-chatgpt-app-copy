@@ -16,9 +16,8 @@ This repo includes three guides, each written for a different purpose:
 
 | Guide | Use this if you want to... |
 |---|---|
-| **[DOCUMENTATION.html](./DOCUMENTATION.html)** | Understand how the whole project was built, step by step, from an empty folder to a live app — architecture, security, deployment, CI/CD, ETL, and analytics all explained in plain language |
-| **[SETUP_GUIDE.html](./SETUP_GUIDE.html)** | Get your own copy of this project running on your own computer, with your own database and API keys |
-| **[TECHNICAL_DOC.md](./TECHNICAL_DOC.md)** | A concise technical reference — architecture diagram, database schema, tech stack, and design decisions |
+| **[DOCUMENTATION](./docs/user_guides_documentation.html)** | Understand how the whole project was built, step by step, from an empty folder to a live app — architecture, security, deployment, CI/CD, ETL, and analytics all explained in plain language |
+| **[TECHNICAL_DOC](./docs/technical_documentation.pdf)** | A concise technical reference — architecture diagram, database schema, tech stack, and design decisions |
 
 ## Features
 
