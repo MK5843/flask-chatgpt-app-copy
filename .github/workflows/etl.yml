@@ -1,0 +1,25 @@
+name: Daily ETL
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # runs every day at 2:00 AM UTC
+  workflow_dispatch:       # lets you also trigger it manually from GitHub's UI
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14.7"
+
+      - name: Install dependencies
+        run: pip install sqlalchemy psycopg2-binary
+
+      - name: Run ETL
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: python etl_daily_stats.py
