@@ -4,6 +4,11 @@ routes behave as expected. These run automatically on every push.
 """
 import os
 
+import sys
+
+# Make sure Python can find app.py, which lives one folder above this file
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 # Dummy values so the app can start in CI without needing real secrets.
 # This is a fixed, non-secret Fernet key generated just for testing —
 # never used against real data.
