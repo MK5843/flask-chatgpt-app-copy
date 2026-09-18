@@ -17,7 +17,7 @@ jobs:
           python-version: "3.14.7"
 
       - name: Install dependencies
-        run: pip install sqlalchemy psycopg2-binary
+        run: pip install sqlalchemy psycopg2-binary python-dotenv
 
       - name: Run ETL
         env:
