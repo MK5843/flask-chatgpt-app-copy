@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flask AI Chat App — Setup &amp; User Guide</title>
+<style>
+  :root{
+    --blue:#2563eb;
+    --blue-dark:#1d4ed8;
+    --ink:#1f2430;
+    --ink-soft:#4b5566;
+    --line:#e4e7ec;
+    --bg-side:#f7f8fa;
+    --code-bg:#0f172a;
+    --code-ink:#e2e8f0;
+    --warn-bg:#fff7ed;
+    --warn-line:#fdba74;
+    --note-bg:#eff6ff;
+    --note-line:#93c5fd;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color:var(--ink);
+    background:#fff;
+    line-height:1.65;
+  }
+  a{color:var(--blue); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    height:56px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:0 20px;
+    background:var(--blue);
+    color:#fff;
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .topbar .brand{
+    font-weight:700;
+    font-size:1.02rem;
+    letter-spacing:.2px;
+  }
+  .topbar .tagline{
+    font-size:.82rem;
+    opacity:.85;
+    display:none;
+  }
+  @media(min-width:720px){ .topbar .tagline{display:inline;} }
+  .topbar .menu-btn{
+    margin-left:auto;
+    background:rgba(255,255,255,.15);
+    border:none;
+    color:#fff;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:.9rem;
+    display:none;
+  }
+  @media(max-width:900px){ .topbar .menu-btn{display:inline-block;} }
+
+  /* ---------- Layout ---------- */
+  .shell{
+    display:flex;
+    max-width:1320px;
+    margin:0 auto;
+  }
+  .sidebar{
+    width:280px;
+    flex-shrink:0;
+    background:var(--bg-side);
+    border-right:1px solid var(--line);
+    height:calc(100vh - 56px);
+    position:sticky;
+    top:56px;
+    overflow-y:auto;
+    padding:18px 0 40px 0;
+  }
+  @media(max-width:900px){
+    .sidebar{
+      position:fixed;
+      left:0; top:56px;
+      height:calc(100vh - 56px);
+      z-index:40;
+      transform:translateX(-100%);
+      transition:transform .2s ease;
+      box-shadow:2px 0 12px rgba(0,0,0,.12);
+    }
+    .sidebar.open{ transform:translateX(0); }
+  }
+  .sidebar h4{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:#8a93a3;
+    margin:22px 20px 6px 20px;
+  }
+  .sidebar h4:first-child{ margin-top:6px; }
+  .sidebar a.nav-link{
+    display:block;
+    padding:7px 20px;
+    font-size:.9rem;
+    color:var(--ink-soft);
+    border-left:3px solid transparent;
+  }
+  .sidebar a.nav-link:hover{
+    background:#eef1f5;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .sidebar a.nav-link.active{
+    border-left:3px solid var(--blue);
+    color:var(--blue);
+    background:#eef2ff;
+    font-weight:600;
+  }
+
+  .content{
+    flex:1;
+    min-width:0;
+    padding:36px 44px 100px 44px;
+  }
+  @media(max-width:640px){
+    .content{ padding:24px 18px 80px 18px; }
+  }
+
+  section.doc-section{
+    margin-bottom:56px;
+    scroll-margin-top:72px;
+  }
+  section.doc-section h1{
+    font-size:1.9rem;
+    margin:0 0 6px 0;
+    color:var(--ink);
+  }
+  section.doc-section h2{
+    font-size:1.3rem;
+    margin:34px 0 10px 0;
+    padding-top:6px;
+    border-top:1px solid var(--line);
+  }
+  section.doc-section > h2:first-of-type{ border-top:none; padding-top:0; }
+  section.doc-section h3{
+    font-size:1.05rem;
+    margin:22px 0 8px 0;
+    color:var(--ink);
+  }
+  section.doc-section p{
+    color:var(--ink-soft);
+    max-width:78ch;
+  }
+  section.doc-section ul, section.doc-section ol{
+    color:var(--ink-soft);
+    max-width:74ch;
+    padding-left:22px;
+  }
+  section.doc-section li{ margin-bottom:6px; }
+  section.doc-section li strong{ color:var(--ink); }
+
+  .lede{
+    font-size:1.05rem;
+    color:var(--ink-soft);
+    max-width:70ch;
+  }
+
+  code{
+    background:#eef0f3;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family:"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size:.88em;
+    color:#b8451f;
+  }
+  pre{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:16px 18px;
+    border-radius:8px;
+    overflow-x:auto;
+    font-size:.85rem;
+    line-height:1.55;
+    max-width:78ch;
+  }
+  pre code{
+    background:none;
+    color:inherit;
+    padding:0;
+    font-size:1em;
+  }
+
+  .callout{
+    border-left:4px solid var(--note-line);
+    background:var(--note-bg);
+    padding:12px 16px;
+    border-radius:6px;
+    margin:16px 0;
+    max-width:74ch;
+    font-size:.92rem;
+    color:var(--ink-soft);
+  }
+  .callout.warn{
+    border-left-color:var(--warn-line);
+    background:var(--warn-bg);
+  }
+  .callout strong{ color:var(--ink); }
+
+  table{
+    border-collapse:collapse;
+    width:100%;
+    max-width:78ch;
+    margin:12px 0 20px 0;
+    font-size:.88rem;
+  }
+  th,td{
+    text-align:left;
+    padding:8px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  th{ color:var(--ink); background:#f7f8fa; }
+  td{ color:var(--ink-soft); }
+
+  .step-num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    background:var(--blue);
+    color:#fff;
+    border-radius:50%;
+    font-size:.75rem;
+    font-weight:700;
+    margin-right:8px;
+  }
+
+  .toc-top{
+    background:#f7f8fa;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 20px;
+    max-width:60ch;
+    margin:18px 0 8px 0;
+  }
+  .toc-top a{ display:block; font-size:.9rem; padding:3px 0; }
+
+  footer.docfoot{
+    border-top:1px solid var(--line);
+    margin-top:60px;
+    padding-top:20px;
+    color:#9aa3b2;
+    font-size:.8rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Flask AI Chat App</div>
+  <div class="tagline">Setup &amp; User Guide (from a downloaded copy)</div>
+  <button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰ Menu</button>
+</div>
+
+<div class="shell">
+  <nav class="sidebar">
+    <h4>Start Here</h4>
+    <a class="nav-link" href="#welcome">Welcome</a>
+    <a class="nav-link" href="#whats-inside">What's Inside This Folder</a>
+    <a class="nav-link" href="#prereqs">What to Install First</a>
+
+    <h4>Setting Up the Folder</h4>
+    <a class="nav-link" href="#save-folder">Saving the Folder to Your Computer</a>
+    <a class="nav-link" href="#open-vscode">Opening It in VS Code</a>
+
+    <h4>Installing the App</h4>
+    <a class="nav-link" href="#venv">Create a Virtual Environment</a>
+    <a class="nav-link" href="#packages">Install the Required Packages</a>
+
+    <h4>Setting Up the Database</h4>
+    <a class="nav-link" href="#install-postgres">Install PostgreSQL &amp; pgAdmin</a>
+    <a class="nav-link" href="#create-db">Create an Empty Database</a>
+    <a class="nav-link" href="#restore-db">Restore the Included Data</a>
+
+    <h4>Your Own Secrets</h4>
+    <a class="nav-link" href="#get-keys">Getting Your Own API Keys</a>
+    <a class="nav-link" href="#create-env">Creating Your .env File</a>
+
+    <h4>Running the App</h4>
+    <a class="nav-link" href="#run-app">Starting the App</a>
+    <a class="nav-link" href="#first-signup">Creating Your First Account</a>
+
+    <h4>Analytics Dashboard</h4>
+    <a class="nav-link" href="#install-powerbi">Install Power BI Desktop</a>
+    <a class="nav-link" href="#reconnect-powerbi">Opening &amp; Reconnecting the Dashboard</a>
+
+    <h4>Going Live (Optional)</h4>
+    <a class="nav-link" href="#going-live-intro">Do You Need This?</a>
+    <a class="nav-link" href="#your-own-neon">Your Own Cloud Database</a>
+    <a class="nav-link" href="#your-own-render">Deploying Your Own Copy</a>
+    <a class="nav-link" href="#your-own-cicd">Optional: CI/CD &amp; ETL</a>
+
+    <h4>Using the App</h4>
+    <a class="nav-link" href="#user-signup">Creating an Account</a>
+    <a class="nav-link" href="#user-chat">Using the Chat</a>
+    <a class="nav-link" href="#user-history">Managing Conversations</a>
+
+    <h4>Optional: Going Live</h4>
+    <a class="nav-link" href="#live-neon">Your Own Cloud Database</a>
+    <a class="nav-link" href="#live-render">Deploying Your Own Copy</a>
+
+    <h4>Reference</h4>
+    <a class="nav-link" href="#troubleshoot">Troubleshooting</a>
+    <a class="nav-link" href="#glossary">Glossary</a>
+  </nav>
+
+
+  <div class="content">
+    <section class="doc-section" id="welcome">
+      <h1>Setup &amp; User Guide</h1>
+      <p class="lede">This guide is for anyone who's received a copy of this project's folder and wants to get it running on their own computer — no prior experience assumed. Every step is explained in plain language, starting from the moment the folder is downloaded.</p>
+      <div class="callout">
+        <strong>What you'll end up with:</strong> a working copy of the chat app running on your own computer, connected to your own database, using your own AI keys — completely independent from the original.
+      </div>
+    </section>
+
+    <section class="doc-section" id="whats-inside">
+      <h2 style="border-top:none;">What's Inside This Folder</h2>
+      <p>The folder you've received contains the app's code, but not its secrets — those have been removed for safety. Here's what to expect:</p>
+      <table>
+        <tr><th>File / Folder</th><th>What it is</th></tr>
+        <tr><td><code>app.py</code></td><td>The main application code</td></tr>
+        <tr><td><code>templates/</code>, <code>static/</code></td><td>The chat screen's look and feel</td></tr>
+        <tr><td><code>requirements.txt</code></td><td>A list of everything the app needs installed</td></tr>
+        <tr><td><code>.env.example</code></td><td>A list of the secret values you'll need to fill in yourself</td></tr>
+        <tr><td><code>chat_message.sql</code>, <code>request_log.sql</code>, <code>user.sql</code> (or a single <code>local_backup.dump</code>)</td><td>A copy of the database's structure — and, if included, some sample data — ready to load in. Not every copy of this project includes these; if yours doesn't, that's fine too, see the restore section below</td></tr>
+        <tr><td><code>power-bi/*.pbix</code></td><td>The analytics dashboard file(s)</td></tr>
+      </table>
+      <div class="callout warn">
+        <strong>No real passwords or API keys are included in this folder.</strong> You'll create your own in the steps below — this is intentional and for your safety. Message content in any included sample data is encrypted, and any included passwords are one-way hashed — neither is readable without secrets you don't have, which is exactly why they're safe to include as sample data.
+      </div>
+    </section>
+
+    <section class="doc-section" id="prereqs">
+      <h2 style="border-top:none;">What to Install First</h2>
+      <p>Install these free tools before going further. Each one is explained when it's actually needed below, but here's the full list upfront:</p>
+      <table>
+        <tr><th>Tool</th><th>What it's for</th></tr>
+        <tr><td>Python 3.10+</td><td>Runs the app's code</td></tr>
+        <tr><td>VS Code</td><td>The editor used to open and run the project</td></tr>
+        <tr><td>PostgreSQL + pgAdmin</td><td>The database, and a visual tool to manage it</td></tr>
+        <tr><td>Power BI Desktop</td><td>Opens the analytics dashboard (Windows only)</td></tr>
+      </table>
+    </section>
+
+    <section class="doc-section" id="save-folder">
+      <h1>Setting Up the Folder</h1>
+      <h2 style="border-top:none;">Saving the Folder to Your Computer</h2>
+      <ol>
+        <li>If the folder arrived as a <code>.zip</code> file, right-click it and choose <strong>Extract All</strong> (Windows) to unzip it</li>
+        <li>Move the extracted folder somewhere easy to find — for example, directly into your <strong>Documents</strong> folder, or a dedicated folder like <code>C:\Projects\</code></li>
+        <li>Avoid saving it inside a cloud-synced folder (like a OneDrive or Dropbox folder) if possible — these can sometimes interfere with Python's virtual environment step later</li>
+        <li>Rename the folder if you like — nothing inside depends on the exact folder name</li>
+      </ol>
+      <div class="callout">
+        A sensible final location might look like: <code>C:\Users\YourName\Documents\flask-chatgpt-app\</code>
+      </div>
+    </section>
+
+    <section class="doc-section" id="open-vscode">
+      <h2 style="border-top:none;">Opening It in VS Code</h2>
+      <ol>
+        <li>Open VS Code</li>
+        <li><strong>File → Open Folder</strong></li>
+        <li>Select the folder from the step above</li>
+        <li>Open a terminal inside VS Code: <strong>Terminal → New Terminal</strong></li>
+      </ol>
+      <p>Everything from here on happens inside this terminal.</p>
+    </section>
+
+    <section class="doc-section" id="venv">
+      <h1>Installing the App</h1>
+      <h2 style="border-top:none;">Create a Virtual Environment</h2>
+      <p>This keeps the project's Python packages separate from anything else on your computer:</p>
+      <pre><code>python -m venv venv</code></pre>
+      <p>Then turn it on. On Windows (Git Bash):</p>
+      <pre><code>source venv/Scripts/activate</code></pre>
+      <p>You'll know it worked when <code>(venv)</code> appears at the start of the terminal line — do this every time you come back to work on the project.</p>
+    </section>
+
+    <section class="doc-section" id="packages">
+      <h2 style="border-top:none;">Install the Required Packages</h2>
+      <p>With <code>(venv)</code> active, install everything listed in <code>requirements.txt</code> in one go:</p>
+      <pre><code>pip install -r requirements.txt</code></pre>
+      <p>This reads the file already included in the folder and installs the exact same packages the original project used — no need to know what each one does individually.</p>
+    </section>
+
+
+    <section class="doc-section" id="install-postgres">
+      <h1>Setting Up the Database</h1>
+      <h2 style="border-top:none;">Install PostgreSQL &amp; pgAdmin</h2>
+      <ol>
+        <li>Download PostgreSQL from <a href="https://www.postgresql.org/download/" target="_blank">postgresql.org</a></li>
+        <li>Run the installer, keeping all default options</li>
+        <li>When asked, set a password for the <code>postgres</code> user — <strong>write this down</strong>, you'll need it shortly</li>
+        <li>Keep the default port, <code>5432</code></li>
+        <li><strong>pgAdmin</strong> installs automatically alongside PostgreSQL — this is the visual tool used in the next steps</li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="create-db">
+      <h2 style="border-top:none;">Create an Empty Database</h2>
+      <ol>
+        <li>Open <strong>pgAdmin</strong></li>
+        <li>Enter the password from the previous step when asked</li>
+        <li>In the left sidebar, expand <strong>Servers → PostgreSQL</strong></li>
+        <li>Right-click <strong>Databases → Create → Database</strong></li>
+        <li>Name it <code>flask-chat-app</code> and click <strong>Save</strong></li>
+      </ol>
+      <p>At this point the database exists, but it's completely empty — the next step fills it with the included structure and sample data.</p>
+    </section>
+
+    <section class="doc-section" id="restore-db">
+      <h2 style="border-top:none;">Restore the Included Data</h2>
+      <p>How to load in existing data depends on what's actually included in the folder you received — check first, then follow the matching method below.</p>
+
+      <h3>Option A: A local_backup.dump file is included</h3>
+      <p>This is the simplest method — one command restores everything (structure and data) in one go. In your terminal:</p>
+      <pre><code>pg_restore --no-owner --no-privileges -d "postgresql://postgres:YOUR_PASSWORD@localhost:5432/flask-chat-app" local_backup.dump</code></pre>
+      <p>Replace <code>YOUR_PASSWORD</code> with the PostgreSQL password you set during installation. If Git Bash says <code>pg_restore: command not found</code>, use the full path instead, adjusting the version number to match what you installed:</p>
+      <pre><code>"C:\Program Files\PostgreSQL\18\bin\pg_restore" --no-owner --no-privileges -d "postgresql://postgres:YOUR_PASSWORD@localhost:5432/flask-chat-app" local_backup.dump</code></pre>
+
+      <h3>Option B: Individual .sql files are included instead</h3>
+      <p>Load each one in using pgAdmin's Query Tool:</p>
+      <ol>
+        <li>Right-click your new <code>flask-chat-app</code> database → <strong>Query Tool</strong></li>
+        <li>Open each included <code>.sql</code> file (e.g. <code>user.sql</code>) in a text editor, copy its contents, paste into the Query Tool, and click ▶ Run</li>
+        <li>Repeat for each <code>.sql</code> file included in the folder</li>
+      </ol>
+      <div class="callout">
+        Don't worry about getting the order exactly right — if one file mentions a table another file hasn't created yet, just run that one again after the others finish; pgAdmin will tell you clearly if something's missing.
+      </div>
+
+      <h3>Option C: No data files are included at all</h3>
+      <p>That's fine too — nothing extra to do here. The very first time you run the app (<code>python app.py</code>), it automatically creates every table it needs, just empty. The Power BI dashboard will simply show zeros until you've signed up and sent a few chat messages yourself — that's expected, not a problem.</p>
+
+      <p>Whichever method applies, once it's done, the app's tables (and any included sample data) exist in your own local database, completely independent of the original.</p>
+
+      <h3>Creating your own backup later (optional)</h3>
+      <p>Once you've been using your own copy for a while, you might want to save a backup of your own data — for example, before trying something risky, or to move it to another computer. The same tool used to create the included backup can make one of your own:</p>
+      <pre><code>pg_dump -h localhost -U postgres -d flask-chat-app -F c -f my_backup.dump</code></pre>
+      <p>If Git Bash says <code>pg_dump: command not found</code>, use the full path instead, adjusting the version number to match what you installed:</p>
+      <pre><code>"C:\Program Files\PostgreSQL\18\bin\pg_dump" -h localhost -U postgres -d flask-chat-app -F c -f my_backup.dump</code></pre>
+      <p>This creates <code>my_backup.dump</code> in your current folder — a single file holding everything, which can be restored later using the same <code>pg_restore</code> command from Option A above.</p>
+    </section>
+
+
+    <section class="doc-section" id="get-keys">
+      <h1>Your Own Secrets</h1>
+      <h2 style="border-top:none;">Getting Your Own API Keys</h2>
+      <p>The app relies on a few outside services. Since none of the original credentials were included, you'll need your own free accounts for these:</p>
+      <table>
+        <tr><th>Service</th><th>Where to get a key</th><th>Cost</th></tr>
+        <tr><td>OpenAI</td><td><a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></td><td>Requires adding a small amount of billing</td></tr>
+        <tr><td>Google Gemini</td><td><a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></td><td>Free tier available, no card needed</td></tr>
+        <tr><td>Google Sign-In (OAuth)</td><td><a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> → APIs &amp; Services → Credentials</td><td>Free</td></tr>
+      </table>
+      <div class="callout">
+        <strong>The app works fine with just one AI key.</strong> If you only set up Gemini (the free one), the chat will simply use that every time — the OpenAI-then-Gemini fallback only matters if you add both.
+      </div>
+    </section>
+
+    <section class="doc-section" id="create-env">
+      <h2 style="border-top:none;">Creating Your .env File</h2>
+      <p>The folder includes a file called <code>.env.example</code> — a template showing exactly which values are needed, without any real secrets in it.</p>
+      <ol>
+        <li>Make a copy of <code>.env.example</code> in the same folder</li>
+        <li>Rename the copy to exactly <code>.env</code></li>
+        <li>Open it and replace each placeholder with your own real values</li>
+      </ol>
+      <pre><code>OPENAI_API_KEY=your_real_openai_key
+GEMINI_API_KEY=your_real_gemini_key
+APP_SECRET_KEY=make_up_any_random_text_here
+ENCRYPTION_KEY=see_below
+FLASK_SECRET_KEY=make_up_any_random_text_here
+GOOGLE_CLIENT_ID=your_real_google_client_id
+GOOGLE_CLIENT_SECRET=your_real_google_client_secret
+DB_PASSWORD=the_postgres_password_you_set_earlier</code></pre>
+      <p>For <code>ENCRYPTION_KEY</code>, generate a fresh one with this command, and paste the result in:</p>
+      <pre><code>python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"</code></pre>
+      <div class="callout warn">
+        <strong>Never share your <code>.env</code> file with anyone, or upload it anywhere.</strong> It holds all your real secrets. It's already set up to be ignored by Git automatically.
+      </div>
+    </section>
+
+
+    <section class="doc-section" id="run-app">
+      <h1>Running the App</h1>
+      <h2 style="border-top:none;">Starting the App</h2>
+      <p>With <code>(venv)</code> active and <code>.env</code> filled in, start the app:</p>
+      <pre><code>python app.py</code></pre>
+      <p>Look for a line like <code>Running on http://127.0.0.1:5000</code> — then open that address in a web browser.</p>
+      <div class="callout warn">
+        <strong>If it shows an error instead</strong> — it's almost always a missing or mistyped value in <code>.env</code>. The error message names exactly which one is missing, e.g. <code>OPENAI_API_KEY is not set</code>.
+      </div>
+    </section>
+
+    <section class="doc-section" id="first-signup">
+      <h2 style="border-top:none;">Creating Your First Account</h2>
+      <p>The app will show a sign-in page first. Since this is a fresh database, no accounts exist yet:</p>
+      <ol>
+        <li>Click <strong>"Don't have an account? Sign up"</strong></li>
+        <li>Enter any email and a password (at least 8 characters)</li>
+        <li>Click <strong>Sign Up</strong> — you'll be taken straight into the chat screen</li>
+      </ol>
+      <p>From here, the app works exactly like the original — chatting, conversation history, and the sidebar all function the same way, just using your own local setup.</p>
+    </section>
+
+    <section class="doc-section" id="install-powerbi">
+      <h1>Analytics Dashboard</h1>
+      <h2 style="border-top:none;">Install Power BI Desktop</h2>
+      <p>Power BI Desktop is free, Windows-only, and can be installed from the <a href="https://www.microsoft.com/en-us/power-platform/products/power-bi/downloads" target="_blank">Microsoft Store or Power BI's website</a>.</p>
+    </section>
+
+    <section class="doc-section" id="reconnect-powerbi">
+      <h2 style="border-top:none;">Opening &amp; Reconnecting the Dashboard</h2>
+      <p>The included <code>.pbix</code> file was built against the original database — it needs to be pointed at <em>your</em> local database before it will show any data.</p>
+      <ol>
+        <li>Open the <code>.pbix</code> file from the <code>power-bi</code> folder</li>
+        <li>Go to <strong>Home → Transform data</strong></li>
+        <li>In the left sidebar, click on a table (e.g. <code>public request_log</code>)</li>
+        <li>Find the formula bar at the top, showing something like:<br><code>= PostgreSQL.Database("some-old-address", "flask-chat-app")</code></li>
+        <li>Replace it with your own local connection:<br><code>= PostgreSQL.Database("localhost:5432", "flask-chat-app")</code></li>
+        <li>When prompted, log in using <code>postgres</code> and the password you set during installation</li>
+        <li>Repeat for every other table in the sidebar</li>
+        <li>Click <strong>Close &amp; Apply</strong></li>
+      </ol>
+      <div class="callout">
+        Once reconnected, the dashboard will show whatever data exists in your own local database — since it started from the included sample data, it should show something right away, and will keep updating as you use the chat app yourself.
+      </div>
+    </section>
+
+    <section class="doc-section" id="going-live-intro">
+      <h1>Going Live (Optional)</h1>
+      <p class="lede">Everything above gets the app running on your own computer. If you'd also like your own copy to be a real, public website — not just running locally — here's how, using the same free services the original was built with: Neon (cloud database) and Render (hosting).</p>
+      <div class="callout">
+        This whole section is optional. If you just want to use the app on your own computer, you're already done — nothing below is required.
+      </div>
+    </section>
+
+    <section class="doc-section" id="your-own-neon">
+      <h2 style="border-top:none;">Your Own Cloud Database</h2>
+      <ol>
+        <li>Sign up free at <a href="https://neon.tech" target="_blank">neon.tech</a></li>
+        <li>Create a new project — Neon gives you a connection string, e.g. <code>postgresql://user:pass@host/dbname?sslmode=require</code></li>
+        <li>Copy your local data across (optional, only if you want your live site to start with the same sample data):</li>
+      </ol>
+      <pre><code># Export from your local database
+pg_dump -h localhost -U postgres -d flask-chat-app -F c -f my_backup.dump
+
+# Import into your new Neon database
+pg_restore --no-owner --no-privileges -d "your-neon-connection-string" my_backup.dump</code></pre>
+    </section>
+
+    <section class="doc-section" id="your-own-render">
+      <h2 style="border-top:none;">Deploying Your Own Copy</h2>
+
+      <h3>One line of code needs your own details</h3>
+      <p>Find this in <code>app.py</code>:</p>
+      <pre><code>@app.route('/login/google')
+def login_google():
+    if os.environ.get("RENDER"):
+        redirect_uri = 'https://flask-chatgpt-app.onrender.com/login/google/callback'
+    else:
+        redirect_uri = 'http://127.0.0.1:5000/login/google/callback'
+    return google.authorize_redirect(redirect_uri)</code></pre>
+      <p>Change the web address inside the quotes to whatever your own live address will be, once you know it (you'll get this after your first deploy below) — for example:</p>
+      <pre><code>        redirect_uri = 'https://your-own-app-name.onrender.com/login/google/callback'</code></pre>
+      <div class="callout warn">
+        This only matters if you plan to use Google Sign-In on your live site. If you're only using email/password login, you can skip this step entirely.
+      </div>
+
+      <h3>Deploy to Render</h3>
+      <ol>
+        <li>Push your copy of the code to your own GitHub repository (see the earlier steps in this guide if you haven't already)</li>
+        <li>Sign up at <a href="https://render.com" target="_blank">render.com</a></li>
+        <li><strong>New +</strong> → <strong>Web Service</strong> → connect your GitHub repository</li>
+        <li><strong>Build Command:</strong> <code>pip install -r requirements.txt</code></li>
+        <li><strong>Start Command:</strong> <code>gunicorn app:app</code></li>
+        <li><strong>Health Check Path:</strong> <code>/login-page</code> — important, see the warning below</li>
+        <li>Add every value from your own <code>.env</code> as an <strong>Environment Variable</strong> in Render's dashboard, plus your Neon connection string under the key <code>NEON_DATABASE_URL</code></li>
+        <li>Click <strong>Create Web Service</strong></li>
+      </ol>
+      <div class="callout warn">
+        <strong>Don't skip the Health Check Path.</strong> Render checks whether your app is alive by requesting its home page (<code>/</code>). Since this app's home page requires being logged in, the default health check will always fail and Render will keep shutting the app down. Setting it to <code>/login-page</code> instead — a page that doesn't require login — fixes this.
+      </div>
+
+      <h3>If using Google Sign-In, update Google Cloud Console too</h3>
+      <p>Once you know your live address (Render shows it after your first deploy, something like <code>https://your-app-name.onrender.com</code>), add it as a second <strong>Authorized redirect URI</strong> in your Google Cloud Console project — alongside your existing localhost one, not replacing it:</p>
+      <pre><code>https://your-app-name.onrender.com/login/google/callback</code></pre>
+      <p>Then go back and update the line in <code>app.py</code> with this real address, save, commit, and push — Render will automatically redeploy with the fix.</p>
+    </section>
+
+    <section class="doc-section" id="your-own-cicd">
+      <h2 style="border-top:none;">Optional: CI/CD &amp; ETL</h2>
+      <p>This project includes a small CI/CD pipeline (automated tests run on every push, via GitHub Actions) and a scheduled ETL job (daily usage summaries) — both already set up in <code>.github/workflows/</code>.</p>
+      <p>The ETL job needs its own <code>NEON_DATABASE_URL</code> secret added under your GitHub repo's <strong>Settings → Secrets and variables → Actions</strong> to work. Without it, that one workflow will simply show as failing in your Actions tab — that's harmless and just means it hasn't been configured yet, not that anything is broken.</p>
+      <div class="callout">
+        Both of these are entirely optional — the chat app itself works completely fine without either one.
+      </div>
+    </section>
+
+
+
+
+    <section class="doc-section" id="user-signup">
+      <h1>Using the App</h1>
+      <p class="lede">This section is for day-to-day use, once everything above is set up.</p>
+
+      <h2 style="border-top:none;">Creating an Account</h2>
+      <ol>
+        <li>Open the app's address in a browser</li>
+        <li>Choose one of two ways to sign in:
+          <ul>
+            <li><strong>Email &amp; password</strong> — click "Don't have an account? Sign up"</li>
+            <li><strong>Google account</strong> — click "Sign in with Google" (only works if you set up your own Google credentials earlier)</li>
+          </ul>
+        </li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="user-chat">
+      <h2 style="border-top:none;">Using the Chat</h2>
+      <ol>
+        <li>Type a message in the box at the bottom and press <strong>Send</strong> (or hit Enter)</li>
+        <li>The AI's reply appears above the input box a moment later</li>
+        <li>Keep chatting by typing another message — the AI remembers the conversation so far</li>
+      </ol>
+      <div class="callout">
+        As with any AI, replies can occasionally be wrong. Always double-check anything important, and avoid sharing sensitive, personal, or confidential information.
+      </div>
+    </section>
+
+    <section class="doc-section" id="user-history">
+      <h2 style="border-top:none;">Managing Conversations</h2>
+      <ul>
+        <li><strong>Starting a new topic?</strong> Click <strong>+ New Chat</strong> in the sidebar</li>
+        <li><strong>Returning to an old conversation?</strong> Click it in the sidebar list</li>
+        <li><strong>On a phone?</strong> Tap the menu icon (☰) to open the sidebar</li>
+        <li><strong>Signing out?</strong> Click <strong>Log out</strong> at the bottom of the sidebar</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="live-neon">
+      <h1>Optional: Going Live</h1>
+      <p class="lede">Everything above gets the app running on your own computer. This section is only needed if you want to take it further — putting your own copy on the internet, so anyone with a link can try it, the same way the original was deployed.</p>
+
+      <h2 style="border-top:none;">Your Own Cloud Database</h2>
+      <p>Your local database only exists on your own computer — nothing outside it can reach it. To go live, you need a database that lives on the internet instead. This project was built using <strong>Neon</strong>, a free, serverless PostgreSQL host.</p>
+      <ol>
+        <li>Sign up free at <a href="https://neon.tech" target="_blank">neon.tech</a></li>
+        <li>Create a new project — Neon gives you a connection string that looks like:<br><code>postgresql://user:password@ep-something.aws.neon.tech/dbname?sslmode=require</code></li>
+        <li>Copy that connection string — add it to your <code>.env</code> file as <code>NEON_DATABASE_URL</code></li>
+      </ol>
+
+      <h3>Moving your data across (optional)</h3>
+      <p>If you want your live site to start with the same data you've been testing with locally, export it and import it into Neon:</p>
+      <pre><code># Export from your local database
+pg_dump -h localhost -U postgres -d flask-chat-app -F c -f my_backup.dump
+
+# Import into Neon
+pg_restore --no-owner --no-privileges -d "your-neon-connection-string" my_backup.dump</code></pre>
+      <p>If you'd rather your live site start completely empty, skip this — it'll simply build its tables fresh the first time it runs.</p>
+    </section>
+
+    <section class="doc-section" id="live-render">
+      <h2 style="border-top:none;">Deploying Your Own Copy</h2>
+      <p><strong>Render</strong> is a free hosting service that runs the app continuously online, and automatically redeploys it whenever you push new code to your GitHub repository.</p>
+      <ol>
+        <li>Sign up at <a href="https://render.com" target="_blank">render.com</a></li>
+        <li><strong>New +</strong> → <strong>Web Service</strong> → connect your GitHub repository</li>
+        <li><strong>Build Command:</strong> <code>pip install -r requirements.txt</code></li>
+        <li><strong>Start Command:</strong> <code>gunicorn app:app</code></li>
+        <li><strong>Health Check Path:</strong> set this to <code>/login-page</code> — not the default <code>/</code>, since <code>/</code> requires being logged in and Render's automatic health check needs a page that always responds normally</li>
+        <li>Add every value from your <code>.env</code> file as an <strong>Environment Variable</strong> in Render's dashboard (the real values, no quote marks around them)</li>
+        <li>Click <strong>Create Web Service</strong></li>
+      </ol>
+      <div class="callout warn">
+        <strong>Free tier note:</strong> the live app "falls asleep" after about 15 minutes without visitors, and takes up to a minute to wake back up on the next visit. This is a standard tradeoff of free hosting, not a bug.
+      </div>
+
+      <h3>One code change you'll need to make first</h3>
+      <p>This copy still has the <em>original</em> project's live web address written into one line of <code>app.py</code>, used specifically for Google sign-in:</p>
+      <pre><code>redirect_uri = 'https://flask-chatgpt-app.onrender.com/login/google/callback'</code></pre>
+      <p>Once Render gives you your <em>own</em> live address (something like <code>https://your-app-name.onrender.com</code>), update this line to use it instead. This only matters for the live version — your local copy running on your own computer is unaffected either way.</p>
+
+      <h3>Don't forget: Google Sign-In needs your live address too</h3>
+      <p>In <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a>, under your OAuth Client's <strong>Authorized redirect URIs</strong>, add your own live address alongside the existing localhost one:</p>
+      <pre><code>https://your-app-name.onrender.com/login/google/callback</code></pre>
+
+      <h3>About the included automation (optional)</h3>
+      <p>This copy also includes an automated testing setup (GitHub Actions) and a scheduled daily data-summary job. The testing part works immediately with no setup. The daily job needs your own Neon connection string saved as a GitHub secret named <code>NEON_DATABASE_URL</code> (repo → Settings → Secrets and variables → Actions) if you want it to run — otherwise it's safe to simply ignore, or turn off entirely by deleting <code>.github/workflows/etl.yml</code>.</p>
+    </section>
+
+    <section class="doc-section" id="troubleshoot">
+      <h1>Reference</h1>
+      <h2 style="border-top:none;">Troubleshooting</h2>
+      <table>
+        <tr><th>Problem</th><th>Likely fix</th></tr>
+        <tr><td>App won't start — mentions a missing key</td><td>Open <code>.env</code> and check that every value from the template has been filled in</td></tr>
+        <tr><td>"password authentication failed" for the database</td><td>Double-check <code>DB_PASSWORD</code> in <code>.env</code> matches what was set during PostgreSQL installation</td></tr>
+        <tr><td>Power BI shows no data</td><td>The connection wasn't switched to your local database yet — see the reconnect steps above</td></tr>
+        <tr><td>Google sign-in doesn't work</td><td>Expected if you haven't set up your own Google OAuth credentials — email/password sign-in works without this</td></tr>
+        <tr><td>"Both AI providers failed"</td><td>Check that at least one of <code>OPENAI_API_KEY</code> or <code>GEMINI_API_KEY</code> in <code>.env</code> is a real, working key</td></tr>
+      </table>
+    </section>
+
+    <section class="doc-section" id="glossary">
+      <h2 style="border-top:none;">Glossary</h2>
+      <table>
+        <tr><th>Term</th><th>Plain meaning</th></tr>
+        <tr><td>API key</td><td>A private password that lets the app use an outside service like OpenAI</td></tr>
+        <tr><td>.env file</td><td>A file holding all the app's secret values, kept out of any shared copy</td></tr>
+        <tr><td>Virtual environment</td><td>A private, self-contained set of Python packages just for this project</td></tr>
+        <tr><td>Restore / Import</td><td>Loading previously saved data into a fresh, empty database</td></tr>
+        <tr><td>DirectQuery</td><td>A Power BI mode that reads live data instead of a saved snapshot</td></tr>
+      </table>
+    </section>
+
+
+
+
+    <footer class="docfoot">
+      Flask AI Chat Application — setup guide for a downloaded copy — Manpreet Kaur
+    </footer>
+  </div>
+</div>
+
+<script>
+  // highlight active sidebar link on scroll
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section.doc-section');
+  function setActive(){
+    let current = sections[0]?.id;
+    sections.forEach(s=>{
+      const rect = s.getBoundingClientRect();
+      if(rect.top < 120) current = s.id;
+    });
+    links.forEach(l=>{
+      l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', setActive);
+  setActive();
+
+  // close mobile sidebar after clicking a link
+  links.forEach(l => l.addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.remove('open');
+  }));
+</script>
+
+</body>
+</html>

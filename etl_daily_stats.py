@@ -37,7 +37,7 @@ else:
             "Set DATABASE_URL to run against Neon, or DB_PASSWORD in .env to run locally."
         )
     print("Connecting to: local PostgreSQL")
-    engine = create_engine(f'postgresql://postgres:{DB_PASSWORD}@localhost:5432/flask-chat-app')
+    engine = create_engine(f'postgresql://postgres:{DB_PASSWORD}@localhost:your_localhost/your_db_name')
 # ==================== END DATABASE CONNECTION ====================
 
 

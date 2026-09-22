@@ -4,5 +4,3 @@ __pycache__/
 *.db
 .vscode/
 .env
-local_backup.dump
-*.sql

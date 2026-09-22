@@ -59,11 +59,7 @@ MAX_MESSAGE_LENGTH = 1000
 
 
 # ==================== DATABASE SETUP & DEPLOYMENT USES NEON ON RENDER ====================
-'''
--------OLD VERSION — replaced with deployment logic below--------
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{DB_PASSWORD}@localhost:5432/flask-chat-app'
-'''
+
 # [DEPLOYMENT] — uses Neon on Render if DATABASE_URL is set, otherwise falls back to local Postgres
 if os.environ.get("RENDER"):
     # Running on Render — always use Neon
@@ -74,7 +70,7 @@ if os.environ.get("RENDER"):
 else:
     # Running locally in terminal — always use local Postgres
     DB_PASSWORD = os.environ.get("DB_PASSWORD")
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{DB_PASSWORD}@localhost:5432/flask-chat-app'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{DB_PASSWORD}@localhost:your_localhost/your_db_name'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -233,46 +229,6 @@ def get_ai_reply(user_message):
 def home():
     return render_template('index.html')
 
-'''
-OLD VERSION — replaced with Power BI logging support below.
-Kept here for reference.
-
-@app.route('/chat', methods=['POST'])
-@login_required
-def chat():
-    data = request.get_json(silent=True)
-    if not data or 'message' not in data:
-        return jsonify({'error': 'Missing "message" in request body'}), 400
-
-    user_message = str(data.get('message', '')).strip()
-    conversation_id = str(data.get('conversation_id', '')).strip()
-
-    if not conversation_id:
-        return jsonify({'error': 'Missing conversation_id'}), 400
-
-    if not user_message:
-        return jsonify({'error': 'Message cannot be empty'}), 400
-
-    if len(user_message) > MAX_MESSAGE_LENGTH:
-        return jsonify({'error': f'Message too long (max {MAX_MESSAGE_LENGTH} characters)'}), 400
-
-    try:
-        ai_reply, source = get_ai_reply(user_message)
-    except Exception:
-        return jsonify({'error': 'Both AI providers failed. Please try again later.'}), 500
-
-    db.session.add(ChatMessage(
-        user_id=current_user.id, conversation_id=conversation_id,
-        role='user', message=encrypt_text(user_message), source=source
-    ))
-    db.session.add(ChatMessage(
-        user_id=current_user.id, conversation_id=conversation_id,
-        role='assistant', message=encrypt_text(ai_reply), source=source
-    ))
-    db.session.commit()
-
-    return jsonify({'response': ai_reply, 'source': source})
-'''
 @app.route('/chat', methods=['POST'])
 @login_required
 def chat():
@@ -419,19 +375,12 @@ def logout():
 # ==================== END EMAIL/PASSWORD AUTH ====================
 
 # ==================== GOOGLE LOGIN [LOGIN] ====================
-'''
-OLD VERSION — replaced with new version below that links Google to existing email/password accounts if the email matches.
-@app.route('/login/google')
-def login_google():
-    redirect_uri = 'http://127.0.0.1:5000/login/google/callback'
-    return google.authorize_redirect(redirect_uri)
-'''
 @app.route('/login/google')
 def login_google():
     if os.environ.get("RENDER"):
-        redirect_uri = 'https://flask-chatgpt-app.onrender.com/login/google/callback'
+        redirect_uri = 'https://your_flask_chat_app_link.onrender.com/login/google/callback'
     else:
-        redirect_uri = 'http://127.0.0.1:5000/login/google/callback'
+        redirect_uri = 'http://your_localhost_link/login/google/callback'
     return google.authorize_redirect(redirect_uri)
 
 
@@ -521,20 +470,6 @@ def get_conversation(conversation_id):
 # ==================== END USER INFO + CONVERSATIONS ====================
 
 # ==================== GLOBAL ERROR HANDLER [BUG REPORT] ====================
-'''
-OLD VERSION — replaced with new version below that skips routine HTTP errors like 404s.
-@app.errorhandler(Exception)
-def handle_unexpected_error(e):
-    """Catches ANY unhandled crash anywhere in the app and logs it."""
-    import traceback
-    log_error(
-        endpoint=request.path,
-        error_type=type(e).__name__,
-        error_message=traceback.format_exc(),
-        user_id=current_user.id if current_user.is_authenticated else None
-    )
-    return jsonify({'error': 'Something went wrong on our end.'}), 500
-'''
 @app.errorhandler(Exception)
 def handle_unexpected_error(e):
     """Catches unhandled crashes and logs them — but skips routine HTTP

@@ -1,0 +1,1 @@
+SELECT * FROM request_log;

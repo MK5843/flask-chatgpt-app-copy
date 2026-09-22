@@ -1,0 +1,1 @@
+SELECT * FROM chat_message ORDER BY id DESC;
