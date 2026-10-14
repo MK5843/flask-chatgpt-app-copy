@@ -102,6 +102,10 @@ def run_etl():
         conn.execute(text(CREATE_TABLE_SQL))
 
         daily_rows = conn.execute(text(AGGREGATE_SQL)).mappings().all()
+        if not daily_rows:
+            print("ETL complete — no records found to summarize.")
+            return
+
         error_counts = {row["stat_date"]: row["total_errors"] for row in conn.execute(text(ERROR_COUNT_SQL)).mappings().all()}
 
         for row in daily_rows:
